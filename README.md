@@ -48,3 +48,13 @@ At the top of `sketch.js`, edit:
 - `style.css` — page styling around the canvas
 - `sketch.js` — all game logic, scenes, characters, and interactions
 - `assets/` — the supplied Hearthvale design images
+
+## Mobile controls
+
+The prototype is now optimized for phones and tablets in landscape orientation.
+
+- Drag the on-screen joystick in the lower-left corner to move.
+- Tap the INTERACT button in the lower-right corner to collect resources or begin an encounter.
+- Tap all menu, dialogue, battle, and navigation buttons directly.
+- Portrait phones display a prompt asking the player to rotate the device.
+- The page disables browser scrolling and text selection while playing so gestures stay inside the game.

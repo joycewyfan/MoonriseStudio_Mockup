@@ -27,6 +27,11 @@ let resourceNodes = [];
 let enemyPos;
 let fade = 255;
 
+// Mobile controls
+let joystick = { active: false, touchId: null, baseX: 130, baseY: 590, knobX: 130, knobY: 590, radius: 68, dx: 0, dy: 0 };
+let mobileAction = { x: 1135, y: 590, radius: 58 };
+let lastTouchActionTime = 0;
+
 function preload() {
   images.title = loadImage("assets/title_art.png");
   images.board = loadImage("assets/concept_board.png");
@@ -186,14 +191,15 @@ function drawForest() {
 
   drawCorruptedBeast(enemyPos.x, enemyPos.y, 0.7);
   drawQuestTracker();
+  drawMobileControls();
 
   const nearbyNode = resourceNodes.find(n => !n.collected && dist(player.x, player.y, n.x, n.y) < 62);
   if (nearbyNode) {
-    interactionPrompt("Press SPACE to collect bamboo");
+    interactionPrompt("Tap INTERACT or press SPACE to collect bamboo");
   }
 
   if (dist(player.x, player.y, enemyPos.x, enemyPos.y) < 105) {
-    interactionPrompt("Press SPACE to confront the corrupted beast");
+    interactionPrompt("Tap INTERACT or press SPACE to confront the beast");
   }
 
   if (resources.bamboo >= 5 && resources.stone >= 3) {
@@ -382,35 +388,92 @@ function keyPressed() {
   }
 
   if (scene === "forest" && key === " ") {
-    const node = resourceNodes.find(n => !n.collected && dist(player.x, player.y, n.x, n.y) < 62);
-    if (node) {
-      node.collect();
-      return false;
-    }
-
-    if (dist(player.x, player.y, enemyPos.x, enemyPos.y) < 105) {
-      if (resources.bamboo < 5) {
-        toast("Collect all 5 bamboo bundles before confronting the beast.");
-      } else {
-        changeScene("combat");
-      }
-      return false;
-    }
+    forestInteract();
+    return false;
   }
 }
 
 function mousePressed() {
+  // Touch events already handle mobile input, so avoid firing an action twice.
+  if (millis() - lastTouchActionTime < 350) return false;
+  handlePointerPress(mouseX, mouseY);
+  return false;
+}
+
+function handlePointerPress(px, py) {
   for (let i = buttons.length - 1; i >= 0; i--) {
-    if (buttons[i].contains(mouseX, mouseY) && !buttons[i].disabled) {
+    if (buttons[i].contains(px, py) && !buttons[i].disabled) {
       buttons[i].action();
-      return;
+      return true;
     }
   }
+
+  if (scene === "forest" && dist(px, py, mobileAction.x, mobileAction.y) <= mobileAction.radius + 18) {
+    forestInteract();
+    return true;
+  }
+  return false;
 }
 
 function touchStarted() {
-  mousePressed();
+  lastTouchActionTime = millis();
+  for (const t of touches) {
+    if (scene === "forest" && t.x < W * 0.42 && t.y > H * 0.48) {
+      joystick.active = true;
+      joystick.touchId = t.id;
+      updateJoystick(t.x, t.y);
+    } else {
+      handlePointerPress(t.x, t.y);
+    }
+  }
   return false;
+}
+
+function touchMoved() {
+  if (joystick.active) {
+    const t = touches.find(item => item.id === joystick.touchId);
+    if (t) updateJoystick(t.x, t.y);
+  }
+  return false;
+}
+
+function touchEnded() {
+  const stillActive = touches.some(item => item.id === joystick.touchId);
+  if (!stillActive) resetJoystick();
+  return false;
+}
+
+function updateJoystick(px, py) {
+  const vx = px - joystick.baseX;
+  const vy = py - joystick.baseY;
+  const length = Math.hypot(vx, vy) || 1;
+  const limited = Math.min(length, joystick.radius);
+  joystick.dx = vx / length * (limited / joystick.radius);
+  joystick.dy = vy / length * (limited / joystick.radius);
+  joystick.knobX = joystick.baseX + joystick.dx * joystick.radius;
+  joystick.knobY = joystick.baseY + joystick.dy * joystick.radius;
+}
+
+function resetJoystick() {
+  joystick.active = false;
+  joystick.touchId = null;
+  joystick.dx = 0;
+  joystick.dy = 0;
+  joystick.knobX = joystick.baseX;
+  joystick.knobY = joystick.baseY;
+}
+
+function forestInteract() {
+  const node = resourceNodes.find(n => !n.collected && dist(player.x, player.y, n.x, n.y) < 62);
+  if (node) {
+    node.collect();
+    return;
+  }
+
+  if (dist(player.x, player.y, enemyPos.x, enemyPos.y) < 105) {
+    if (resources.bamboo < 5) toast("Collect all 5 bamboo bundles before confronting the beast.");
+    else changeScene("combat");
+  }
 }
 
 // ---------- WORLD DRAWING ----------
@@ -577,6 +640,36 @@ function drawMiniMap() {
   pop();
 }
 
+
+function drawMobileControls() {
+  // Large translucent controls remain visible on desktop so the audience
+  // immediately understands that this is designed as a mobile game.
+  push();
+  noStroke();
+  fill(12, 16, 12, 125);
+  circle(joystick.baseX, joystick.baseY, joystick.radius * 2.25);
+  stroke(239, 211, 145, 150);
+  strokeWeight(3);
+  noFill();
+  circle(joystick.baseX, joystick.baseY, joystick.radius * 2);
+  noStroke();
+  fill(232, 198, 116, joystick.active ? 210 : 145);
+  circle(joystick.knobX, joystick.knobY, 64);
+
+  fill(20, 14, 10, 190);
+  stroke(239, 190, 83, 210);
+  strokeWeight(4);
+  circle(mobileAction.x, mobileAction.y, mobileAction.radius * 2);
+  noStroke();
+  fill("#f8e6b9");
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(15);
+  text("INTERACT", mobileAction.x, mobileAction.y - 2);
+  textStyle(NORMAL);
+  pop();
+}
+
 function interactionPrompt(label) {
   const w = 390;
   fill(16, 12, 9, 225);
@@ -655,6 +748,11 @@ class Player {
     if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) dx += 1;
     if (keyIsDown(UP_ARROW) || keyIsDown(87)) dy -= 1;
     if (keyIsDown(DOWN_ARROW) || keyIsDown(83)) dy += 1;
+
+    // Add the on-screen joystick vector for touch players.
+    dx += joystick.dx;
+    dy += joystick.dy;
+
     if (dx !== 0 || dy !== 0) {
       const m = sqrt(dx * dx + dy * dy);
       dx /= m;

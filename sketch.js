@@ -26,6 +26,9 @@ let combat = { enemyHP: 100, playerHP: 100, message: "A corrupted guardian block
 let resourceNodes = [];
 let enemyPos;
 let fade = 255;
+let playerChoice = { body: "female", hair: 0, outfit: 0 };
+let activePanel = null;
+let audioTracks = {};
 
 // Mobile controls
 let joystick = { active: false, touchId: null, baseX: 130, baseY: 590, knobX: 130, knobY: 590, radius: 68, dx: 0, dy: 0 };
@@ -33,15 +36,16 @@ let mobileAction = { x: 1135, y: 590, radius: 58 };
 let lastTouchActionTime = 0;
 
 function preload() {
-  images.title = loadImage("assets/title_art.png");
-  images.board = loadImage("assets/concept_board.png");
-  images.map = loadImage("assets/realm_map.png");
-  images.regions = loadImage("assets/regions.png");
-  images.village = loadImage("assets/village_restoration.png");
-  images.creatures = loadImage("assets/corrupted_creatures.png");
+  images.title = loadImage("assets/images/title_art.png");
+  images.board = loadImage("assets/images/concept_board.png");
+  images.map = loadImage("assets/images/realm_map.png");
+  images.regions = loadImage("assets/images/regions.png");
+  images.village = loadImage("assets/images/village_restoration.png");
+  images.creatures = loadImage("assets/images/corrupted_creatures.png");
 }
 
 function setup() {
+  setupAudio();
   const cnv = createCanvas(W, H);
   cnv.parent("game-container");
   textFont("Georgia");
@@ -55,6 +59,7 @@ function draw() {
   buttons = [];
 
   if (scene === "title") drawTitle();
+  else if (scene === "character") drawCharacterCreation();
   else if (scene === "story") drawStory();
   else if (scene === "village") drawVillage(false);
   else if (scene === "forest") drawForest();
@@ -63,12 +68,88 @@ function draw() {
   else if (scene === "restored") drawVillage(true);
   else if (scene === "map") drawMap();
   else if (scene === "gallery") drawGallery();
+  else if (scene === "quest") drawQuestLog();
+  else if (scene === "inventory") drawInventory();
+  else if (scene === "build") drawBuildMode();
+  else if (scene === "profile") drawGuardianProfile();
 
   drawCursorGlow();
   drawFade();
 }
 
+function setupAudio() {
+  audioTracks.forest = new Audio("assets/audios/bambooforest.mp3");
+  audioTracks.fight = new Audio("assets/audios/bamboofight.mp3");
+  audioTracks.active = null;
+
+  for (const track of [audioTracks.forest, audioTracks.fight]) {
+    track.loop = true;
+    track.preload = "auto";
+    track.volume = 0.55;
+  }
+}
+
+function setSceneAudio(nextScene) {
+  const nextTrack = nextScene === "forest" ? audioTracks.forest : nextScene === "combat" ? audioTracks.fight : null;
+
+  if (audioTracks.active && audioTracks.active !== nextTrack) {
+    audioTracks.active.pause();
+    audioTracks.active.currentTime = 0;
+    audioTracks.active = null;
+  }
+
+  if (!nextTrack) return;
+  if (audioTracks.active === nextTrack && !nextTrack.paused) return;
+
+  nextTrack.currentTime = 0;
+  nextTrack.play().catch(() => {});
+  audioTracks.active = nextTrack;
+}
+
 // ---------- SCENES ----------
+
+function drawCharacterCreation() {
+  background("#ead8b8");
+  drawCoverImage(images.board);
+  fill(24, 15, 10, 185);
+  rect(0, 0, W, H);
+  glassPanel(55, 55, 1170, 610, 0.92);
+  fill("#f8e8c3"); textAlign(LEFT, TOP); textStyle(BOLD); textSize(42);
+  text("CREATE YOUR LANTERN KEEPER", 90, 82);
+  textStyle(NORMAL); textSize(18); fill("#ddc9a5");
+  text("Choose a character style for the demo. This affects the on-screen hero only.", 92, 135, 500, 54);
+
+  // preview
+  fill(255,255,255,18); rect(90, 185, 440, 390, 20);
+  drawPlayerAvatar(310, 395, 1.55, playerChoice.body);
+
+  fill("#f3e1bf"); textStyle(BOLD); textSize(21); text("BODY", 585, 195);
+  addButton("Female", 585, 235, 170, 52, () => playerChoice.body="female", playerChoice.body==="female"?"gold":"dark");
+  addButton("Male", 770, 235, 170, 52, () => playerChoice.body="male", playerChoice.body==="male"?"gold":"dark");
+
+  fill("#f3e1bf"); text("HAIRSTYLE", 585, 320);
+  for (let i=0;i<3;i++) addButton(`Style ${i+1}`, 585+i*155, 360, 140, 48, () => playerChoice.hair=i, playerChoice.hair===i?"gold":"dark");
+
+  fill("#f3e1bf"); text("OUTFIT", 585, 445);
+  for (let i=0;i<3;i++) addButton(["Village Green","Lantern Gold","Mist Blue"][i], 585+i*155, 485, 140, 48, () => playerChoice.outfit=i, playerChoice.outfit===i?"gold":"dark");
+
+  addButton("Continue", 950, 585, 220, 56, () => changeScene("story"), "gold");
+  addButton("Back", 90, 585, 150, 56, () => changeScene("title"), "dark");
+}
+
+function drawPlayerAvatar(x,y,s,body="female") {
+  push(); translate(x,y); scale(s); noStroke();
+  fill("#2a211b"); ellipse(0,-74,64,70);
+  if (body==="female") ellipse(0,-92,42,32);
+  fill("#f1c7a6"); ellipse(0,-65,48,52);
+  fill(["#315942","#b7772c","#315b70"][playerChoice.outfit]); rect(-28,-34,56,70,10);
+  fill("#ead8b5"); rect(-22,-23,44,24,6);
+  fill("#2f2a24"); rect(-23,34,18,38,6); rect(5,34,18,38,6);
+  fill("#efb852"); rect(25,-5,13,30,4); ellipse(31,28,20);
+  fill("#2c201b"); ellipse(-9,-68,5); ellipse(9,-68,5);
+  pop();
+}
+
 
 function drawTitle() {
   drawCoverImage(images.title);
@@ -85,9 +166,9 @@ function drawTitle() {
   textStyle(NORMAL);
   textSize(19);
   fill("#f5dfae");
-  text("A short interactive vertical slice: explore, purify, recruit, rebuild, and relight the world.", 87, 554, 550, 56);
+  text("A short interactive vertical slice: explore, purify, recruit, rebuild, and relight the world.", 87, 554, 520, 68);
 
-  addButton("Begin the Journey", 870, 565, 300, 70, () => changeScene("story"), "gold");
+  addButton("Begin the Journey", 870, 565, 300, 70, () => changeScene("character"), "gold");
   addButton("View Concept Art", 870, 645, 300, 48, () => changeScene("gallery"), "dark");
 }
 
@@ -158,6 +239,8 @@ function drawVillage(restored) {
     drawLantern(640, 325, 0.9, "#f2b84f");
 
     addButton("Explore Bamboo Forest", 855, 620, 350, 60, () => changeScene("forest"), "gold");
+    addButton("Quest Log", 65, 620, 180, 52, () => changeScene("quest"), "dark");
+    addButton("Inventory", 260, 620, 180, 52, () => changeScene("inventory"), "dark");
   } else {
     drawRestoredShrine(930, 350);
     drawLantern(640, 310, 1.35, "#ffd76a");
@@ -174,8 +257,10 @@ function drawVillage(restored) {
     textStyle(NORMAL);
     textSize(18);
     textLeading(27);
-    text("The restored shrine welcomes villagers home. New services, quests, and guardian stories can now be unlocked.", 95, 565, 500, 75);
+    text("The restored shrine welcomes villagers home. New services, quests, and guardian stories can now be unlocked.", 95, 565, 505, 82);
     addButton("Reveal the Realm Map", 855, 620, 350, 60, () => changeScene("map"), "gold");
+    addButton("Customize Village", 65, 620, 240, 52, () => changeScene("build"), "dark");
+    addButton("Guardian Profile", 320, 620, 220, 52, () => changeScene("profile"), "dark");
   }
 }
 
@@ -226,7 +311,7 @@ function drawCombat() {
   fill("#f3e6c6");
   textAlign(LEFT, TOP);
   textSize(19);
-  text(combat.message, 125, 575, 460, 70);
+  text(combat.message, 125, 575, 430, 72);
 
   if (combat.enemyHP > 0) {
     addButton("Lantern Strike", 620, 575, 175, 64, () => combatAction("strike"), "dark");
@@ -259,7 +344,7 @@ function drawGuardianReveal() {
   textStyle(NORMAL);
   textSize(20);
   fill("#78614c");
-  text("Water • Healer • Village Support", W / 2, 150);
+  text("Water • Healer • Village Support", W / 2, 150, 420, 32);
 
   drawMoonRabbit(W / 2, 365, 1.65);
 
@@ -272,7 +357,7 @@ function drawGuardianReveal() {
   textStyle(NORMAL);
   textSize(18);
   textLeading(27);
-  text("Restores the Lantern Keeper's health during battle and increases crop growth when assigned to Hearthvale.", 95, 580, 650, 70);
+  text("Restores the Lantern Keeper's health during battle and increases crop growth when assigned to Hearthvale.", 95, 580, 640, 80);
 
   addButton("Answer the Call", 870, 570, 300, 70, () => {
     guardianUnlocked = true;
@@ -317,6 +402,75 @@ function drawGallery() {
   rect(0, 0, W, H);
   drawTopHUD("CONCEPT ART & GAME SYSTEMS");
   addButton("Back to Demo", 1015, 642, 225, 50, () => changeScene(villageRestored ? "map" : "title"), "gold");
+}
+
+
+function drawQuestLog() {
+  background("#211914"); drawCoverImage(images.village); fill(10,8,7,205); rect(0,0,W,H);
+  glassPanel(150,70,980,575,0.94);
+  fill("#f8e9c7"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(42); text("QUEST JOURNAL",190,105);
+  labelPill("MAIN QUEST",190,175,150);
+  textSize(30); text("Relight the Abandoned Shrine",190,225);
+  textStyle(NORMAL); textSize(19); fill("#e1d0ad");
+  text("Travel to the Bamboo Forest, collect materials, purify the corrupted guardian, and restore the shrine in Hearthvale.",190,275,790,92);
+  questStep(210,385,"Collect 5 Bamboo",resources.bamboo>=5,`${min(resources.bamboo,5)} / 5`);
+  questStep(210,445,"Collect 3 Spirit Stones",resources.stone>=3,`${min(resources.stone,3)} / 3`);
+  questStep(210,505,"Restore the Shrine",villageRestored,villageRestored?"Complete":"Locked");
+  addButton("Return",900,565,180,54,()=>changeScene(villageRestored?"restored":"village"),"gold");
+}
+function questStep(x,y,label,done,status){
+  fill(done?"#5e9b67":"#554c42"); ellipse(x,y,28); fill("#f5e5c3"); textStyle(BOLD); textSize(18); text(done?"✓":"•",x-6,y-12);
+  textAlign(LEFT,CENTER); text(label,x+30,y); textAlign(RIGHT,CENTER); fill("#dfc98f"); text(status,1020,y); textAlign(LEFT,TOP);
+}
+
+function drawInventory() {
+  background("#1e1813"); drawCoverImage(images.board); fill(10,8,7,205); rect(0,0,W,H);
+  glassPanel(95,65,1090,590,0.94);
+  fill("#f8e8c4"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(42); text("INVENTORY",135,100);
+  const items=[
+    ["Bamboo",resources.bamboo,"Building material gathered in the forest."],
+    ["Spirit Stone",resources.stone,"Purified stone used to restore shrines."],
+    ["Lantern Energy",resources.lantern+"%","Strength gained by restoring connection."],
+    ["Guardian Memory",guardianUnlocked?1:0,"A recovered memory belonging to Moon Rabbit."],
+    ["Lantern Fragment",villageRestored?1:0,"One of seven fragments needed to heal the realm."]
+  ];
+  items.forEach((it,i)=>inventoryCard(140+(i%3)*330,190+floor(i/3)*190,it[0],it[1],it[2],i));
+  addButton("Return",930,585,190,52,()=>changeScene(villageRestored?"restored":"village"),"gold");
+}
+function inventoryCard(x,y,name,amount,desc,i){
+  fill(255,255,255,15); stroke(225,190,120,90); strokeWeight(2); rect(x,y,285,150,14); noStroke();
+  fill(["#74a85d","#b79c78","#e6b74b","#8dc8ce","#d47556"][i]); ellipse(x+48,y+48,48);
+  fill("#f3e2bf"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(20); text(name,x+82,y+25); textSize(26); text(amount,x+82,y+56);
+  textStyle(NORMAL); textSize(13); fill("#d7c4a4"); text(desc,x+18,y+100,244,50);
+}
+
+function drawBuildMode(){
+  drawVillageWorld(true); drawTopHUD("VILLAGE CUSTOMIZATION");
+  glassPanel(45,105,310,500,0.92); fill("#f5e4c0"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(28); text("BUILD & DECORATE",75,135);
+  textStyle(NORMAL); textSize(16); fill("#d8c5a4"); text("Choose an item, then place it in the highlighted village area.",75,180,250,60);
+  const opts=["Cherry Tree","Lantern Stand","Lotus Pond","Bamboo Screen"];
+  opts.forEach((o,i)=>addButton(o,75,260+i*70,230,50,()=>toast(o+" placed in the village!"),i===0?"gold":"dark"));
+  noFill(); stroke(255,220,120,160); strokeWeight(3); rect(420,270,630,300); noStroke();
+  drawCherryTree(710,390,1.15);
+  fill("#f9e8c3"); textAlign(CENTER,TOP); textStyle(BOLD); textSize(18); text("DRAG / TAP TO PLACE",735,575);
+  addButton("Confirm Layout",1010,625,210,52,()=>changeScene("restored"),"gold");
+  addButton("Cancel",45,625,150,52,()=>changeScene("restored"),"dark");
+}
+
+function drawGuardianProfile(){
+  background("#ede1c9");
+  fill("#3b2a20"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(44); text("GUARDIAN PROFILE",70,55);
+  drawMoonRabbit(350,365,1.55);
+  glassPanel(560,95,640,500,0.95,true);
+  fill("#3a291f"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(38); text("Moon Rabbit Alchemist",600,135);
+  textStyle(NORMAL); textSize(18); fill("#765f4a"); text("Water • Healer • Village Support",600,188);
+  labelPill("FRIENDSHIP LV. 1",600,235,210);
+  fill("#3a291f"); textStyle(BOLD); textSize(22); text("Moonlit Remedy",600,305);
+  textStyle(NORMAL); textSize(17); fill("#6c5747"); text("Restores health during battle and increases crop growth when assigned to Hearthvale.",600,342,500,78);
+  textStyle(BOLD); text("Recovered Memory",600,435); textStyle(NORMAL);
+  text("A faded memory of tending a moonlit medicine garden has returned.",600,472,500,72);
+  addButton("Give Friendship Gift",600,535,240,52,()=>toast("Friendship increased! New voice line unlocked."),"gold");
+  addButton("Return",965,625,200,52,()=>changeScene("restored"),"dark");
 }
 
 // ---------- GAMEPLAY ----------
@@ -1304,5 +1458,6 @@ function drawFade() {
 
 function changeScene(next) {
   scene = next;
+  setSceneAudio(next);
   fade = 185;
 }

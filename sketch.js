@@ -78,11 +78,13 @@ function draw() {
 }
 
 function setupAudio() {
+  audioTracks.background = new Audio("assets/audios/background.mp3");
+  audioTracks.story = new Audio("assets/audios/story.mp3");
   audioTracks.forest = new Audio("assets/audios/bambooforest.mp3");
   audioTracks.fight = new Audio("assets/audios/bamboofight.mp3");
   audioTracks.active = null;
 
-  for (const track of [audioTracks.forest, audioTracks.fight]) {
+  for (const track of [audioTracks.background, audioTracks.story, audioTracks.forest, audioTracks.fight]) {
     track.loop = true;
     track.preload = "auto";
     track.volume = 0.55;
@@ -90,7 +92,17 @@ function setupAudio() {
 }
 
 function setSceneAudio(nextScene) {
-  const nextTrack = nextScene === "forest" ? audioTracks.forest : nextScene === "combat" ? audioTracks.fight : null;
+  const backgroundScenes = new Set(["title", "character", "gallery", "quest", "inventory", "build", "profile", "map", "guardian", "restored"]);
+  const storyScenes = new Set(["story", "village"]);
+  const nextTrack = backgroundScenes.has(nextScene)
+    ? audioTracks.background
+    : storyScenes.has(nextScene)
+      ? audioTracks.story
+      : nextScene === "forest"
+        ? audioTracks.forest
+        : nextScene === "combat"
+          ? audioTracks.fight
+          : null;
 
   if (audioTracks.active && audioTracks.active !== nextTrack) {
     audioTracks.active.pause();

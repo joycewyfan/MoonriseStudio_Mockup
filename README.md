@@ -70,9 +70,12 @@ The prototype is now optimized for phones and tablets in landscape orientation.
 | `assets/images/corrupted_creatures.png` | Created by ChatGPT |
 | `assets/audios/bamboofight.mp3` [1]| pixabay.com |
 | `assets/audios/bambooforest.mp3` [2]| pixabay.com |
+| `assets/audios/story.mp3` [3]| pixabay.com |
+| `assets/audios/background.mp3` [4]| pixabay.com |
 
 ## References
 
 [1] https://pixabay.com/music/percussion-bamboo-forest-taiko-drums-trailer-572681/
 [2] https://pixabay.com/music/meditationspiritual-bamboo-grove-dream-497192/ 
-[3] 
+[3] https://pixabay.com/music/main-title-hometown-in-my-dream-171523/
+[4] https://pixabay.com/music/main-title-anime-piano-437378/ 

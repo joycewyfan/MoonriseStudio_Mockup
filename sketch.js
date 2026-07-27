@@ -117,7 +117,7 @@ function drawCharacterCreation() {
   fill("#f8e8c3"); textAlign(LEFT, TOP); textStyle(BOLD); textSize(42);
   text("CREATE YOUR LANTERN KEEPER", 90, 82);
   textStyle(NORMAL); textSize(18); fill("#ddc9a5");
-  text("Choose a character style for the demo. This affects the on-screen hero only.", 92, 135, 500, 54);
+  text("Choose a character style for the demo. This affects the on-screen hero only.", 92, 135);
 
   // preview
   fill(255,255,255,18); rect(90, 185, 440, 390, 20);
@@ -166,7 +166,7 @@ function drawTitle() {
   textStyle(NORMAL);
   textSize(19);
   fill("#f5dfae");
-  text("A short interactive vertical slice: explore, purify, recruit, rebuild, and relight the world.", 87, 554, 520, 68);
+  text("A short interactive vertical slice: explore, purify, recruit, rebuild, and relight the world.", 87, 554, 550, 56);
 
   addButton("Begin the Journey", 870, 565, 300, 70, () => changeScene("character"), "gold");
   addButton("View Concept Art", 870, 645, 300, 48, () => changeScene("gallery"), "dark");
@@ -257,7 +257,7 @@ function drawVillage(restored) {
     textStyle(NORMAL);
     textSize(18);
     textLeading(27);
-    text("The restored shrine welcomes villagers home. New services, quests, and guardian stories can now be unlocked.", 95, 565, 505, 82);
+    text("The restored shrine welcomes villagers home. New services, quests, and guardian stories can now be unlocked.", 95, 565, 500, 75);
     addButton("Reveal the Realm Map", 855, 620, 350, 60, () => changeScene("map"), "gold");
     addButton("Customize Village", 65, 620, 240, 52, () => changeScene("build"), "dark");
     addButton("Guardian Profile", 320, 620, 220, 52, () => changeScene("profile"), "dark");
@@ -311,7 +311,7 @@ function drawCombat() {
   fill("#f3e6c6");
   textAlign(LEFT, TOP);
   textSize(19);
-  text(combat.message, 125, 575, 430, 72);
+  text(combat.message, 125, 575, 460, 70);
 
   if (combat.enemyHP > 0) {
     addButton("Lantern Strike", 620, 575, 175, 64, () => combatAction("strike"), "dark");
@@ -344,7 +344,7 @@ function drawGuardianReveal() {
   textStyle(NORMAL);
   textSize(20);
   fill("#78614c");
-  text("Water • Healer • Village Support", W / 2, 150, 420, 32);
+  text("Water • Healer • Village Support", W / 2, 150);
 
   drawMoonRabbit(W / 2, 365, 1.65);
 
@@ -357,7 +357,7 @@ function drawGuardianReveal() {
   textStyle(NORMAL);
   textSize(18);
   textLeading(27);
-  text("Restores the Lantern Keeper's health during battle and increases crop growth when assigned to Hearthvale.", 95, 580, 640, 80);
+  text("Restores the Lantern Keeper's health during battle and increases crop growth when assigned to Hearthvale.", 95, 580, 650, 70);
 
   addButton("Answer the Call", 870, 570, 300, 70, () => {
     guardianUnlocked = true;
@@ -412,7 +412,7 @@ function drawQuestLog() {
   labelPill("MAIN QUEST",190,175,150);
   textSize(30); text("Relight the Abandoned Shrine",190,225);
   textStyle(NORMAL); textSize(19); fill("#e1d0ad");
-  text("Travel to the Bamboo Forest, collect materials, purify the corrupted guardian, and restore the shrine in Hearthvale.",190,275,790,92);
+  text("Travel to the Bamboo Forest, collect materials, purify the corrupted guardian, and restore the shrine in Hearthvale.",190,275,820,80);
   questStep(210,385,"Collect 5 Bamboo",resources.bamboo>=5,`${min(resources.bamboo,5)} / 5`);
   questStep(210,445,"Collect 3 Spirit Stones",resources.stone>=3,`${min(resources.stone,3)} / 3`);
   questStep(210,505,"Restore the Shrine",villageRestored,villageRestored?"Complete":"Locked");
@@ -441,13 +441,13 @@ function inventoryCard(x,y,name,amount,desc,i){
   fill(255,255,255,15); stroke(225,190,120,90); strokeWeight(2); rect(x,y,285,150,14); noStroke();
   fill(["#74a85d","#b79c78","#e6b74b","#8dc8ce","#d47556"][i]); ellipse(x+48,y+48,48);
   fill("#f3e2bf"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(20); text(name,x+82,y+25); textSize(26); text(amount,x+82,y+56);
-  textStyle(NORMAL); textSize(13); fill("#d7c4a4"); text(desc,x+18,y+100,244,50);
+  textStyle(NORMAL); textSize(14); fill("#d7c4a4"); text(desc,x+18,y+102,250,42);
 }
 
 function drawBuildMode(){
   drawVillageWorld(true); drawTopHUD("VILLAGE CUSTOMIZATION");
   glassPanel(45,105,310,500,0.92); fill("#f5e4c0"); textAlign(LEFT,TOP); textStyle(BOLD); textSize(28); text("BUILD & DECORATE",75,135);
-  textStyle(NORMAL); textSize(16); fill("#d8c5a4"); text("Choose an item, then place it in the highlighted village area.",75,180,250,60);
+  textStyle(NORMAL); textSize(16); fill("#d8c5a4"); text("Choose an item, then place it in the highlighted village area.",75,180,240,60);
   const opts=["Cherry Tree","Lantern Stand","Lotus Pond","Bamboo Screen"];
   opts.forEach((o,i)=>addButton(o,75,260+i*70,230,50,()=>toast(o+" placed in the village!"),i===0?"gold":"dark"));
   noFill(); stroke(255,220,120,160); strokeWeight(3); rect(420,270,630,300); noStroke();
@@ -466,9 +466,9 @@ function drawGuardianProfile(){
   textStyle(NORMAL); textSize(18); fill("#765f4a"); text("Water • Healer • Village Support",600,188);
   labelPill("FRIENDSHIP LV. 1",600,235,210);
   fill("#3a291f"); textStyle(BOLD); textSize(22); text("Moonlit Remedy",600,305);
-  textStyle(NORMAL); textSize(17); fill("#6c5747"); text("Restores health during battle and increases crop growth when assigned to Hearthvale.",600,342,500,78);
+  textStyle(NORMAL); textSize(17); fill("#6c5747"); text("Restores health during battle and increases crop growth when assigned to Hearthvale.",600,342,520,70);
   textStyle(BOLD); text("Recovered Memory",600,435); textStyle(NORMAL);
-  text("A faded memory of tending a moonlit medicine garden has returned.",600,472,500,72);
+  text("A faded memory of tending a moonlit medicine garden has returned.",600,472,520,65);
   addButton("Give Friendship Gift",600,535,240,52,()=>toast("Friendship increased! New voice line unlocked."),"gold");
   addButton("Return",965,625,200,52,()=>changeScene("restored"),"dark");
 }
